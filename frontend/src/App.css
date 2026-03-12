@@ -1,0 +1,92 @@
+#root {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+}
+
+.nav {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #444;
+}
+.nav a {
+  color: #646cff;
+}
+
+.page {
+  text-align: left;
+}
+.page h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+.page h2 {
+  font-size: 1.2rem;
+  margin-top: 1.5rem;
+}
+
+.form-page form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 400px;
+}
+.form-page label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.form-page input,
+.form-page textarea {
+  padding: 0.4rem;
+}
+.form-page .error {
+  color: #e74c3c;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.filters input,
+.filters select {
+  padding: 0.4rem;
+}
+
+.pet-list {
+  list-style: none;
+  padding: 0;
+}
+.pet-list li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #333;
+}
+.pet-list a {
+  color: #646cff;
+}
+
+.home-links {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: #646cff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.link-btn:hover {
+  color: #535bf2;
+}
+.link-btn.danger {
+  color: #e74c3c;
+}
