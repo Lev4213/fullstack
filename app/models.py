@@ -36,4 +36,15 @@ class Pet(Base):
     contact_phone = Column(String(50), nullable=True)
     contact_email = Column(String(255), nullable=True)
 
+    image_path = Column(String(500), nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class PetImage(Base):
+    __tablename__ = "pet_images"
+
+    id = Column(Integer, primary_key=True, index=True)
+    pet_id = Column(Integer, ForeignKey("pets.id", ondelete="CASCADE"), nullable=False, index=True)
+    image_path = Column(String(500), nullable=False)
+    sort_order = Column(Integer, default=0, nullable=False)

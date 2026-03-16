@@ -17,6 +17,7 @@ function buildQuery(f?: PetFilters): string {
   if (f.species) params.set('species', f.species)
   if (f.sex) params.set('sex', f.sex)
   if (f.breed) params.set('breed', f.breed)
+  if (f.color) params.set('color', f.color)
   if (f.city) params.set('city', f.city)
   if (f.is_lost !== undefined) params.set('is_lost', String(f.is_lost))
   if (f.date_from) params.set('date_from', f.date_from)
@@ -26,7 +27,8 @@ function buildQuery(f?: PetFilters): string {
 }
 
 export async function getPets(filters?: PetFilters): Promise<Pet[]> {
-  return api<Pet[]>(`/pets/${buildQuery(filters)}`)
+  const query = buildQuery(filters)
+  return api<Pet[]>(`/pets${query}`)
 }
 
 export async function getMyPets(): Promise<Pet[]> {
@@ -44,6 +46,29 @@ export async function createPet(data: PetCreate): Promise<Pet> {
   })
 }
 
+export interface PetUpdate {
+  name?: string
+  species?: string
+  sex?: string | null
+  breed?: string | null
+  color?: string | null
+  city?: string | null
+  last_seen_place?: string | null
+  last_seen_date?: string | null
+  description?: string | null
+  is_lost?: boolean
+  contact_name?: string | null
+  contact_phone?: string | null
+  contact_email?: string | null
+}
+
+export async function updatePet(id: number, data: PetUpdate): Promise<Pet> {
+  return api<Pet>(`/pets/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
 export async function deactivatePet(id: number): Promise<void> {
   return api<void>(`/pets/${id}`, { method: 'DELETE' })
 }
@@ -55,4 +80,27 @@ export async function deletePetPermanent(id: number): Promise<void> {
 export function getFlyerUrl(id: number): string {
   const base = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
   return `${base}/pets/${id}/flyer.pdf`
+}
+
+const apiBase = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+
+export function getPetImageUrl(imagePath: string | null): string | null {
+  if (!imagePath) return null
+  return `${apiBase}/uploads/${imagePath}`
+}
+
+export async function uploadPetPhoto(petId: number, file: File): Promise<Pet> {
+  const token = localStorage.getItem('token')
+  const form = new FormData()
+  form.append('image', file)
+  const res = await fetch(`${apiBase}/pets/${petId}/photo`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail || res.statusText)
+  }
+  return res.json()
 }

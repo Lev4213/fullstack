@@ -1,11 +1,23 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  --bg-page: #F3F8FD;
+  --bg-card: #ffffff;
+  --accent-blue: #00AAFF;
+  --accent-blue-hover: #0090dd;
+  --accent-orange: #FF9000;
+  --accent-orange-hover: #e07d00;
+  --text: #1a1a2e;
+  --text-muted: #5a5a6e;
+  --border: #d0dce8;
+  --radius: 8px;
+  --radius-sm: 6px;
+
+  color-scheme: light;
+  color: var(--text);
+  background-color: var(--bg-page);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -15,11 +27,11 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+  color: var(--accent-blue);
+  text-decoration: none;
 }
 a:hover {
-  color: #535bf2;
+  color: var(--accent-blue-hover);
 }
 
 body {
@@ -29,38 +41,42 @@ body {
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: 1.85rem;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+h2 {
+  font-size: 1.2rem;
+  color: var(--text);
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  padding: 0.5em 1rem;
+  font-size: 1rem;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--bg-card);
+  color: var(--text);
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+input,
+textarea,
+select {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-family: inherit;
 }

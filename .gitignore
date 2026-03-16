@@ -13,6 +13,9 @@ build/
 frontend/node_modules/
 frontend/dist/
 
+# Uploads (user content)
+uploads/
+
 # IDE / OS
 .idea/
 .vscode/

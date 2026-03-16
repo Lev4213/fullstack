@@ -21,6 +21,8 @@ export interface Pet {
   contact_email: string | null
   owner_id: number | null
   is_active: boolean
+  image_path: string | null
+  image_paths: string[]
   created_at: string
 }
 

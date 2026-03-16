@@ -1,0 +1,291 @@
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate, Link, useParams } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { getPet, updatePet, uploadPetPhoto, type PetUpdate } from '../api/pets'
+import type { Pet } from '../types'
+
+function validatePhone(phone: string | null | undefined): string | null {
+  if (!phone || !phone.trim()) return null
+  const digits = phone.replace(/\D/g, '')
+  if (digits.length < 10) return 'Введите не менее 10 цифр'
+  if (phone.length > 20) return 'Слишком длинный номер'
+  return null
+}
+
+export default function EditPet() {
+  const { id } = useParams<{ id: string }>()
+  const { user, loading: authLoading } = useAuth()
+  const navigate = useNavigate()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [pet, setPet] = useState<Pet | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [photoFiles, setPhotoFiles] = useState<File[]>([])
+  const [form, setForm] = useState<PetUpdate>({})
+
+  useEffect(() => {
+    if (!id || !user) {
+      setLoading(false)
+      return
+    }
+    getPet(Number(id))
+      .then((p) => {
+        setPet(p)
+        setForm({
+          name: p.name,
+          species: p.species,
+          sex: p.sex ?? undefined,
+          breed: p.breed ?? undefined,
+          color: p.color ?? undefined,
+          city: p.city ?? undefined,
+          last_seen_place: p.last_seen_place ?? undefined,
+          last_seen_date: p.last_seen_date ?? undefined,
+          description: p.description ?? undefined,
+          is_lost: p.is_lost,
+          contact_name: p.contact_name ?? undefined,
+          contact_phone: p.contact_phone ?? undefined,
+          contact_email: p.contact_email ?? undefined,
+        })
+      })
+      .catch(() => setError('Объявление не найдено'))
+      .finally(() => setLoading(false))
+  }, [id, user])
+
+  if (authLoading || !user) {
+    navigate('/login')
+    return null
+  }
+
+  if (loading) return <div className="page"><p>Загрузка...</p></div>
+  if (error || !pet) {
+    return (
+      <div className="page">
+        <p>{error || 'Не найдено'}</p>
+        <Link to="/cabinet">В кабинет</Link>
+      </div>
+    )
+  }
+
+  if (pet.owner_id !== user.id) {
+    return (
+      <div className="page">
+        <p>Редактировать можно только своё объявление.</p>
+        <Link to="/cabinet">В кабинет</Link>
+      </div>
+    )
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    if (form.name !== undefined && !form.name.trim()) {
+      setError('Кличка не может быть пустой')
+      return
+    }
+    if (form.species !== undefined && !form.species.trim()) {
+      setError('Вид не может быть пустым')
+      return
+    }
+    const phoneErr = validatePhone(form.contact_phone ?? null)
+    if (phoneErr) {
+      setError(phoneErr)
+      return
+    }
+    try {
+      await updatePet(pet.id, form)
+      for (const file of photoFiles) {
+        await uploadPetPhoto(pet.id, file)
+      }
+      navigate(`/pet/${pet.id}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка')
+    }
+  }
+
+  const dateStr = form.last_seen_date
+    ? new Date(form.last_seen_date).toISOString().slice(0, 10)
+    : ''
+
+  return (
+    <div className="page create-pet-page">
+      <h1 className="create-pet-title">Редактирование объявления</h1>
+      <p><Link to="/cabinet">← В кабинет</Link></p>
+
+      <form className="create-pet-form" onSubmit={handleSubmit}>
+        {error && <p className="error">{error}</p>}
+
+        <section className="create-pet-section">
+          <h2 className="create-pet-section-title">Тип объявления</h2>
+          <div className="create-pet-type-tabs">
+            <button
+              type="button"
+              className={`create-pet-tab ${form.is_lost !== false ? 'create-pet-tab-active' : ''}`}
+              onClick={() => setForm((f) => ({ ...f, is_lost: true }))}
+            >
+              Потерялся
+            </button>
+            <button
+              type="button"
+              className={`create-pet-tab ${form.is_lost === false ? 'create-pet-tab-active' : ''}`}
+              onClick={() => setForm((f) => ({ ...f, is_lost: false }))}
+            >
+              Найден
+            </button>
+          </div>
+        </section>
+
+        <section className="create-pet-section">
+          <h2 className="create-pet-section-title">Информация о животном</h2>
+          <div className="create-pet-fields-grid">
+            <label>
+              <span>Вид *</span>
+              <input
+                value={form.species ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, species: e.target.value || undefined }))}
+                placeholder="кошка, собака..."
+                required
+              />
+            </label>
+            <label>
+              <span>Порода</span>
+              <input
+                value={form.breed ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, breed: e.target.value || undefined }))}
+                placeholder="Порода"
+              />
+            </label>
+            <label>
+              <span>Окрас</span>
+              <input
+                value={form.color ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, color: e.target.value || undefined }))}
+                placeholder="Окрас"
+              />
+            </label>
+            <label>
+              <span>Пол</span>
+              <select
+                value={form.sex ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, sex: e.target.value || undefined }))}
+              >
+                <option value="">—</option>
+                <option value="male">Самец</option>
+                <option value="female">Самка</option>
+              </select>
+            </label>
+            <label>
+              <span>Кличка *</span>
+              <input
+                value={form.name ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value || undefined }))}
+                placeholder="Кличка"
+                required
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className="create-pet-section">
+          <h2 className="create-pet-section-title">Район пропажи / находки</h2>
+          <label className="create-pet-full-width">
+            <input
+              value={form.last_seen_place ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, last_seen_place: e.target.value || undefined }))}
+              placeholder="Район или адрес"
+            />
+          </label>
+          <label className="create-pet-full-width create-pet-date-label">
+            <span>Дата</span>
+            <input
+              type="date"
+              value={dateStr}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  last_seen_date: e.target.value ? new Date(e.target.value).toISOString() : undefined,
+                }))
+              }
+            />
+          </label>
+        </section>
+
+        <section className="create-pet-section">
+          <h2 className="create-pet-section-title">Добавить ещё фотографии</h2>
+          <div
+            className="create-pet-photo-zone"
+            onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
+            role="button"
+            tabIndex={0}
+            aria-label="Добавить фото"
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".jpg,.jpeg,.png,.gif,.webp"
+              className="create-pet-photo-input"
+              multiple
+              onChange={(e) => setPhotoFiles(Array.from(e.target.files ?? []))}
+            />
+            {photoFiles.length > 0 ? (
+              <span className="create-pet-photo-name">Добавить фото: {photoFiles.length}</span>
+            ) : (
+              <>
+                <span className="create-pet-photo-icon">📷</span>
+                <span className="create-pet-photo-hint">Нажмите, чтобы добавить фото</span>
+              </>
+            )}
+          </div>
+        </section>
+
+        <section className="create-pet-section">
+          <h2 className="create-pet-section-title">Особые приметы</h2>
+          <label className="create-pet-full-width">
+            <textarea
+              value={form.description ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value || undefined }))}
+              placeholder="Опишите приметы животного"
+              rows={3}
+            />
+          </label>
+        </section>
+
+        <section className="create-pet-section">
+          <h2 className="create-pet-section-title">Контактные данные</h2>
+          <div className="create-pet-contact-fields">
+            <label>
+              <span>Имя</span>
+              <input
+                value={form.contact_name ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, contact_name: e.target.value || undefined }))}
+                placeholder="Как к вам обращаться"
+              />
+            </label>
+            <label>
+              <span>Телефон</span>
+              <input
+                type="tel"
+                value={form.contact_phone ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, contact_phone: e.target.value || undefined }))}
+                placeholder="Телефон"
+              />
+            </label>
+            <label>
+              <span>Почта</span>
+              <input
+                type="email"
+                value={form.contact_email ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, contact_email: e.target.value || undefined }))}
+                placeholder="Email для связи"
+              />
+            </label>
+          </div>
+        </section>
+
+        <button type="submit" className="create-pet-submit">
+          Сохранить
+        </button>
+      </form>
+    </div>
+  )
+}

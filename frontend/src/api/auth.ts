@@ -18,3 +18,7 @@ export async function login(email: string, password: string): Promise<{ access_t
 export async function getMe(): Promise<User> {
   return api<User>('/auth/me')
 }
+
+export async function deleteAccount(): Promise<void> {
+  return api<void>('/auth/me', { method: 'DELETE' })
+}
