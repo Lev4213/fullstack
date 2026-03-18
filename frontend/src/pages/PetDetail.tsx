@@ -91,8 +91,10 @@ export default function PetDetail() {
             <dd>{pet.sex === 'male' ? 'Самец' : pet.sex === 'female' ? 'Самка' : pet.sex || '—'}</dd>
             <dt>Окрас</dt>
             <dd>{pet.color || '—'}</dd>
+            <dt>Город</dt>
+            <dd>{pet.city || '—'}</dd>
             <dt>Район пропажи / находки</dt>
-            <dd>{pet.last_seen_place || pet.city || '—'}</dd>
+            <dd>{pet.last_seen_place || '—'}</dd>
             {pet.last_seen_date && (
               <>
                 <dt>Дата</dt>
@@ -121,7 +123,8 @@ export default function PetDetail() {
 
       <p className="pet-detail-actions">
         <a href={flyerUrl} target="_blank" rel="noreferrer" download className="btn-accent secondary">
-          Создать листовку
+          <img src="/download.svg" alt="" aria-hidden style={{ width: 16, height: 16, marginRight: 6, verticalAlign: 'text-bottom' }} />
+          Скачать листовку
         </a>
       </p>
     </div>

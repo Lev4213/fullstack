@@ -11,14 +11,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..auth import get_current_user
 from ..database import get_async_session
 from ..models import Pet, PetImage, User
-from ..schemas import PetCreate, PetRead, PetUpdate
+from ..schemas import PetCreate, PetListResponse, PetRead, PetUpdate
 from ..pdf import render_pet_flyer_pdf
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[PetRead])
-async def list_pets(
+def _list_pets_base_query(
     species: Optional[str] = None,
     sex: Optional[str] = None,
     breed: Optional[str] = None,
@@ -27,9 +26,10 @@ async def list_pets(
     is_lost: Optional[bool] = None,
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
-    session: AsyncSession = Depends(get_async_session),
+    q: Optional[str] = None,
 ):
     from datetime import datetime
+    from sqlalchemy import or_
     query = select(Pet).where(Pet.is_active.is_(True))
     if species is not None:
         query = query.where(Pet.species == species)
@@ -59,10 +59,49 @@ async def list_pets(
             query = query.where(Pet.last_seen_date <= dt)
         except ValueError:
             pass
+    if q and q.strip():
+        search = f"%{q.strip()}%"
+        query = query.where(
+            or_(
+                Pet.name.ilike(search),
+                Pet.species.ilike(search),
+                Pet.breed.ilike(search),
+                Pet.city.ilike(search),
+                Pet.last_seen_place.ilike(search),
+                Pet.description.ilike(search),
+            )
+        )
+    return query
 
+
+@router.get("/", response_model=PetListResponse)
+async def list_pets(
+    species: Optional[str] = None,
+    sex: Optional[str] = None,
+    breed: Optional[str] = None,
+    color: Optional[str] = None,
+    city: Optional[str] = None,
+    is_lost: Optional[bool] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    q: Optional[str] = None,
+    limit: int = 12,
+    offset: int = 0,
+    session: AsyncSession = Depends(get_async_session),
+):
+    query = _list_pets_base_query(
+        species=species, sex=sex, breed=breed, color=color,
+        city=city, is_lost=is_lost, date_from=date_from, date_to=date_to, q=q,
+    )
+    # Подсчёт по той же выборке (без limit/offset)
+    count_stmt = select(func.count()).select_from(query.subquery())
+    total_result = await session.execute(count_stmt)
+    total = total_result.scalar_one() or 0
+
+    query = query.order_by(Pet.created_at.desc()).limit(limit).offset(offset)
     result = await session.execute(query)
     pets = result.scalars().all()
-    return pets
+    return PetListResponse(items=pets, total=total)
 
 
 @router.get("/my", response_model=List[PetRead])
@@ -246,6 +285,15 @@ async def download_flyer_pdf(
     if pet is None:
         raise HTTPException(status_code=404, detail="Pet not found")
 
+    # Берём первое фото (если есть)
+    img_res = await session.execute(
+        select(PetImage.image_path)
+        .where(PetImage.pet_id == pet_id)
+        .order_by(PetImage.sort_order)
+        .limit(1)
+    )
+    image_path = img_res.scalar_one_or_none() or pet.image_path
+
     lines = [
         f"Имя: {pet.name}",
         f"Вид: {pet.species}",
@@ -265,6 +313,7 @@ async def download_flyer_pdf(
     pdf_bytes = render_pet_flyer_pdf(
         title="ПРОПАЛ ПИТОМЕЦ — ПОМОГИТЕ НАЙТИ",
         lines=lines,
+        image_path=image_path,
     )
 
     filename = f"pet-{pet.id}-flyer.pdf"

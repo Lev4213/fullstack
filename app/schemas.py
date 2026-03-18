@@ -33,6 +33,23 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 
+class ChangeEmailRequest(BaseModel):
+    new_email: EmailStr
+    password: str
+
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def password_min_length(cls, v: str) -> str:
+        if len(v) < 6:
+            raise ValueError("Пароль должен быть не менее 6 символов")
+        return v
+
+
 def _validate_phone(v: Optional[str]) -> Optional[str]:
     if v is None or not v.strip():
         return None
@@ -46,6 +63,7 @@ def _validate_phone(v: Optional[str]) -> Optional[str]:
 
 
 class PetBase(BaseModel):
+    """Базовые поля без валидации телефона (для ответов — в БД могут быть старые некорректные данные)."""
     name: str = Field(..., min_length=1, max_length=200, description="Кличка обязательна")
     species: str = Field(..., min_length=1, max_length=100, description="Вид обязателен")
     sex: Optional[str] = None
@@ -60,14 +78,14 @@ class PetBase(BaseModel):
     contact_phone: Optional[str] = None
     contact_email: Optional[EmailStr] = None
 
+
+class PetCreate(PetBase):
+    """Создание: валидируем телефон при вводе."""
+
     @field_validator("contact_phone")
     @classmethod
     def contact_phone_valid(cls, v: Optional[str]) -> Optional[str]:
         return _validate_phone(v)
-
-
-class PetCreate(PetBase):
-    pass
 
 
 class PetUpdate(BaseModel):
@@ -102,3 +120,9 @@ class PetRead(PetBase):
 
     class Config:
         from_attributes = True
+
+
+class PetListResponse(BaseModel):
+    """Список объявлений с пагинацией."""
+    items: List[PetRead]
+    total: int

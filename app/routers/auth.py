@@ -14,7 +14,7 @@ from ..auth import (
 )
 from ..database import get_async_session
 from ..models import User, Pet
-from ..schemas import UserCreate, UserRead, Token
+from ..schemas import UserCreate, UserRead, Token, ChangeEmailRequest, ChangePasswordRequest
 
 router = APIRouter()
 
@@ -77,4 +77,47 @@ async def delete_account(
     """Удалить свой аккаунт. Объявления пользователя останутся, но без привязки к владельцу."""
     await session.execute(update(Pet).where(Pet.owner_id == current_user.id).values(owner_id=None))
     await session.execute(delete(User).where(User.id == current_user.id))
+    await session.commit()
+
+
+@router.patch("/me/email", response_model=UserRead)
+async def change_email(
+    body: ChangeEmailRequest,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+):
+    if not verify_password(body.password, current_user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Неверный пароль")
+
+    new_email = body.new_email.strip().lower()
+    if new_email == current_user.email:
+        return current_user
+
+    result = await session.execute(select(User).where(User.email == new_email))
+    existing = result.scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Этот email уже занят")
+
+    current_user.email = new_email
+    await session.commit()
+    await session.refresh(current_user)
+    return current_user
+
+
+@router.patch("/me/password", status_code=status.HTTP_204_NO_CONTENT)
+async def change_password(
+    body: ChangePasswordRequest,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+):
+    if not verify_password(body.old_password, current_user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Неверный текущий пароль")
+
+    if verify_password(body.new_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Новый пароль должен отличаться от текущего",
+        )
+
+    current_user.hashed_password = get_password_hash(body.new_password)
     await session.commit()

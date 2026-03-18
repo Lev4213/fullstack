@@ -78,6 +78,7 @@ export default function EditPet() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    if (!pet) return
     if (form.name !== undefined && !form.name.trim()) {
       setError('Кличка не может быть пустой')
       return

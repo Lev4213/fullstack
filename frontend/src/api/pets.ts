@@ -5,10 +5,19 @@ export interface PetFilters {
   species?: string
   sex?: string
   breed?: string
+  color?: string
   city?: string
   is_lost?: boolean
   date_from?: string
   date_to?: string
+  q?: string
+  limit?: number
+  offset?: number
+}
+
+export interface PetListResponse {
+  items: Pet[]
+  total: number
 }
 
 function buildQuery(f?: PetFilters): string {
@@ -22,13 +31,16 @@ function buildQuery(f?: PetFilters): string {
   if (f.is_lost !== undefined) params.set('is_lost', String(f.is_lost))
   if (f.date_from) params.set('date_from', f.date_from)
   if (f.date_to) params.set('date_to', f.date_to)
-  const q = params.toString()
-  return q ? `?${q}` : ''
+  if (f.q) params.set('q', f.q)
+  if (f.limit != null) params.set('limit', String(f.limit))
+  if (f.offset != null) params.set('offset', String(f.offset))
+  const s = params.toString()
+  return s ? `?${s}` : ''
 }
 
-export async function getPets(filters?: PetFilters): Promise<Pet[]> {
+export async function getPets(filters?: PetFilters): Promise<PetListResponse> {
   const query = buildQuery(filters)
-  return api<Pet[]>(`/pets${query}`)
+  return api<PetListResponse>(`/pets${query}`)
 }
 
 export async function getMyPets(): Promise<Pet[]> {

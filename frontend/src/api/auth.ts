@@ -22,3 +22,17 @@ export async function getMe(): Promise<User> {
 export async function deleteAccount(): Promise<void> {
   return api<void>('/auth/me', { method: 'DELETE' })
 }
+
+export async function changeEmail(new_email: string, password: string): Promise<User> {
+  return api<User>('/auth/me/email', {
+    method: 'PATCH',
+    body: JSON.stringify({ new_email, password }),
+  })
+}
+
+export async function changePassword(old_password: string, new_password: string): Promise<void> {
+  return api<void>('/auth/me/password', {
+    method: 'PATCH',
+    body: JSON.stringify({ old_password, new_password }),
+  })
+}
