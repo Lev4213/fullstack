@@ -20,7 +20,7 @@ export interface PetListResponse {
   total: number
 }
 
-function buildQuery(f?: PetFilters): string {
+export function buildQuery(f?: PetFilters): string {
   if (!f) return ''
   const params = new URLSearchParams()
   if (f.species) params.set('species', f.species)
@@ -89,12 +89,13 @@ export async function deletePetPermanent(id: number): Promise<void> {
   return api<void>(`/pets/${id}/permanent`, { method: 'DELETE' })
 }
 
+import { getApiBase } from './baseUrl'
+
 export function getFlyerUrl(id: number): string {
-  const base = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
-  return `${base}/pets/${id}/flyer.pdf`
+  return `${getApiBase()}/pets/${id}/flyer.pdf`
 }
 
-const apiBase = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+const apiBase = getApiBase()
 
 export function getPetImageUrl(imagePath: string | null): string | null {
   if (!imagePath) return null

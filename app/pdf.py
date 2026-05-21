@@ -10,7 +10,6 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
-# Шрифт с кириллицей: пробуем Arial (Windows) или встроенный DejaVu
 _FONT_NAME = "Helvetica"
 try:
     _arial_path = os.path.join(os.environ.get("WINDIR", ""), "Fonts", "arial.ttf")
@@ -18,7 +17,6 @@ try:
         pdfmetrics.registerFont(TTFont("ArialCyr", _arial_path))
         _FONT_NAME = "ArialCyr"
     else:
-        # Linux и др.: часто есть DejaVu в reportlab или системе
         for path in (
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
             "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",

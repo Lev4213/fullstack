@@ -1,4 +1,4 @@
-import { api, apiForm } from './client'
+import { api, API_BASE } from './client'
 import type { User } from '../types'
 
 export async function register(email: string, password: string): Promise<User> {
@@ -9,10 +9,17 @@ export async function register(email: string, password: string): Promise<User> {
 }
 
 export async function login(email: string, password: string): Promise<{ access_token: string; token_type: string }> {
-  const form = new FormData()
-  form.append('username', email)
-  form.append('password', password)
-  return apiForm('/auth/login', form)
+  const body = new URLSearchParams({ username: email, password })
+  const res = await fetch(`${API_BASE}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }))
+    throw new Error(err.detail || res.statusText)
+  }
+  return res.json()
 }
 
 export async function getMe(): Promise<User> {

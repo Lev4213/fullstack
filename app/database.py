@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+asyncpg://postgres:1qazxdr51@localhost:5432/lost_pets",
+    "postgresql+asyncpg://postgres:postgres@localhost:5432/lost_pets",
 )
 
 Base = declarative_base()

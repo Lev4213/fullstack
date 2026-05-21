@@ -1,9 +1,15 @@
 # Python
 venv/
+.venv/
+htmlcov/
+.coverage
+.pytest_cache/
 __pycache__/
 *.py[cod]
 *.pyo
 .env
+.env.local
+.env.*.local
 .venv/
 *.egg-info/
 dist/
@@ -12,6 +18,7 @@ build/
 # Node / frontend
 frontend/node_modules/
 frontend/dist/
+frontend/coverage/
 
 # Uploads (user content)
 uploads/

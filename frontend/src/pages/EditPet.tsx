@@ -190,6 +190,13 @@ export default function EditPet() {
           <h2 className="create-pet-section-title">Район пропажи / находки</h2>
           <label className="create-pet-full-width">
             <input
+              value={form.city ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, city: e.target.value || undefined }))}
+              placeholder="Город"
+            />
+          </label>
+          <label className="create-pet-full-width">
+            <input
               value={form.last_seen_place ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, last_seen_place: e.target.value || undefined }))}
               placeholder="Район или адрес"
@@ -226,7 +233,17 @@ export default function EditPet() {
               accept=".jpg,.jpeg,.png,.gif,.webp"
               className="create-pet-photo-input"
               multiple
-              onChange={(e) => setPhotoFiles(Array.from(e.target.files ?? []))}
+              onChange={(e) => {
+                const input = e.target
+                const files = Array.from(input.files ?? [])
+                if (files.length === 0) return
+                setPhotoFiles((prev) => {
+                  const keys = new Set(prev.map((f) => `${f.name}-${f.size}-${f.lastModified}`))
+                  const toAdd = files.filter((f) => !keys.has(`${f.name}-${f.size}-${f.lastModified}`))
+                  return [...prev, ...toAdd]
+                })
+                input.value = ''
+              }}
             />
             {photoFiles.length > 0 ? (
               <span className="create-pet-photo-name">Добавить фото: {photoFiles.length}</span>

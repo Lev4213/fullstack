@@ -93,7 +93,6 @@ async def list_pets(
         species=species, sex=sex, breed=breed, color=color,
         city=city, is_lost=is_lost, date_from=date_from, date_to=date_to, q=q,
     )
-    # Подсчёт по той же выборке (без limit/offset)
     count_stmt = select(func.count()).select_from(query.subquery())
     total_result = await session.execute(count_stmt)
     total = total_result.scalar_one() or 0

@@ -123,7 +123,7 @@ export default function PetDetail() {
 
       <p className="pet-detail-actions">
         <a href={flyerUrl} target="_blank" rel="noreferrer" download className="btn-accent secondary">
-          <img src="/download.svg" alt="" aria-hidden style={{ width: 16, height: 16, marginRight: 6, verticalAlign: 'text-bottom' }} />
+          <img src="/download.svg" alt="" aria-hidden className="pet-detail-download-icon" />
           Скачать листовку
         </a>
       </p>

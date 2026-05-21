@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 import hashlib
@@ -12,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .database import get_async_session
 from .models import User
 
-SECRET_KEY = "CHANGE_ME_TO_SOMETHING_RANDOM_AND_SECRET"
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
