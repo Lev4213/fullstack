@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/useAuth'
 import { getMyPets, deactivatePet, deletePetPermanent, getFlyerUrl, getPetImageUrl } from '../api/pets'
 import { changeEmail, changePassword } from '../api/auth'
 import type { Pet } from '../types'

@@ -14,20 +14,16 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
-vi.mock('../contexts/AuthContext', async () => {
-  const actual = await vi.importActual<typeof import('../contexts/AuthContext')>('../contexts/AuthContext')
-  return {
-    ...actual,
-    useAuth: () => ({
-      user: null,
-      loading: false,
-      login: loginMock,
-      register: vi.fn(),
-      logout: vi.fn(),
-      setUser: vi.fn(),
-    }),
-  }
-})
+vi.mock('../contexts/useAuth', () => ({
+  useAuth: () => ({
+    user: null,
+    loading: false,
+    login: loginMock,
+    register: vi.fn(),
+    logout: vi.fn(),
+    setUser: vi.fn(),
+  }),
+}))
 
 describe('Login page', () => {
   it('shows validation error for empty password', async () => {
